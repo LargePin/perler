@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>拼豆图纸生成器</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--primary:#FF6B9D;--bg:#FFF5F7;--card:#FFF;--text:#333;--border:#F0E0E5;--shadow:0 2px 12px rgba(255,107,157,0.1);--radius:12px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:80px}
+.header{background:linear-gradient(135deg,#FF6B9D,#FF8E53);color:#fff;padding:20px 16px;text-align:center;box-shadow:0 4px 20px rgba(255,107,157,0.3)}
+.header h1{font-size:22px;font-weight:700;letter-spacing:1px}
+.header p{font-size:12px;opacity:.9;margin-top:4px}
+.container{max-width:1200px;margin:0 auto;padding:16px 12px}
+.grid{display:grid;grid-template-columns:1fr;gap:12px}
+@media(min-width:768px){.grid{grid-template-columns:360px 1fr;gap:20px}body{padding-bottom:0}.container{padding:20px 16px}.header h1{font-size:28px}.header p{font-size:14px}}
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.card-header{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;-webkit-user-select:none}
+.card-header .arrow{margin-left:auto;font-size:12px;color:#999;transition:transform .2s}
+.card-header .arrow.collapsed{transform:rotate(-90deg)}
+.card-body{padding:14px 16px}
+.card-body.collapsed{display:none}
+@media(min-width:768px){.card-body.collapsed{display:block}.card-header .arrow{display:none}}
+
+/* 上传 */
+.upload-zone{border:2px dashed #FFB6C8;border-radius:var(--radius);padding:28px 16px;text-align:center;cursor:pointer;transition:all .3s;background:#FFFAFC}
+.upload-zone:active,.upload-zone.dragover{border-color:var(--primary);background:#FFF0F5}
+.upload-zone .icon{font-size:36px;margin-bottom:8px}
+.upload-zone .text{font-size:14px;color:#888}
+.upload-zone .hint{font-size:11px;color:#bbb;margin-top:4px}
+.upload-zone input{display:none}
+.upload-zone.has-image{padding:10px}
+.upload-zone.has-image img{max-width:100%;max-height:150px;border-radius:8px;object-fit:contain}
+@media(min-width:768px){.upload-zone{padding:36px 20px}.upload-zone .icon{font-size:44px}.upload-zone.has-image img{max-height:180px}}
+
+/* 滑块 */
+.slider-group{margin-bottom:18px}
+.slider-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.slider-label .name{font-size:13px;font-weight:600;color:#555}
+.slider-label .value{font-size:15px;font-weight:700;color:var(--primary);min-width:45px;text-align:right}
+.slider-wrap{display:flex;align-items:center;gap:10px}
+.slider-wrap input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:3px;background:linear-gradient(to right,var(--primary) 0%,var(--primary) 50%,#E8D8DD 50%,#E8D8DD 100%);outline:none}
+.slider-wrap input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:24px;height:24px;border-radius:50%;background:#fff;border:2px solid var(--primary);box-shadow:0 2px 6px rgba(255,107,157,0.3);cursor:pointer}
+.slider-wrap input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#fff;border:2px solid var(--primary);box-shadow:0 2px 6px rgba(255,107,157,0.3);cursor:pointer}
+.slider-wrap input[type=number]{width:52px;padding:6px 4px;border:1px solid #E8D8DD;border-radius:8px;font-size:14px;text-align:center;background:#fff;outline:none;font-weight:600;color:var(--primary)}
+.slider-wrap input[type=number]:focus{border-color:var(--primary)}
+.quick-sizes{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.quick-sizes button{padding:5px 12px;border:1px solid #E8D8DD;border-radius:16px;background:#fff;font-size:12px;color:#666;cursor:pointer;transition:all .2s}
+.quick-sizes button:active,.quick-sizes button.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;margin-top:4px}
+.toggle-row .label{font-size:13px;color:#666;font-weight:600}
+.toggle{width:44px;height:24px;border-radius:12px;background:#ddd;cursor:pointer;position:relative;transition:background .3s;flex-shrink:0}
+.toggle.on{background:var(--primary)}
+.toggle::after{content:'';width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform .3s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle.on::after{transform:translateX(20px)}
+
+/* 色板 */
+.color-panel{margin-top:4px;padding:12px;background:#FAFBFC;border-radius:10px;border:1px solid #F0E8EB}
+.color-panel-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.color-panel-header .left{font-size:13px;font-weight:600;color:#555}
+.color-panel-header .count{background:var(--primary);color:#fff;font-size:11px;font-weight:700;padding:2px 10px;border-radius:20px}
+.color-grid{display:flex;flex-wrap:wrap;gap:4px;max-height:180px;overflow-y:auto;padding-right:4px;-webkit-overflow-scrolling:touch}
+.color-grid::-webkit-scrollbar{width:3px}
+.color-grid::-webkit-scrollbar-thumb{background:#ddd;border-radius:2px}
+.color-item{width:26px;height:26px;border-radius:5px;border:1.5px solid rgba(0,0,0,.08);cursor:pointer;position:relative;transition:transform .15s}
+.color-item:active{transform:scale(1.3);z-index:2}
+@media(min-width:768px){.color-item{width:28px;height:28px}.color-item:hover{transform:scale(1.25);z-index:2}}
+.color-item .tip{display:none;position:absolute;bottom:110%;left:50%;transform:translateX(-50%);background:#333;color:#fff;font-size:10px;padding:4px 8px;border-radius:4px;white-space:nowrap;z-index:10;pointer-events:none}
+.color-item:active .tip,.color-item:hover .tip{display:block}
+
+/* 按钮 */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:14px 24px;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;transition:all .2s;width:100%}
+.btn-primary{background:linear-gradient(135deg,#FF6B9D,#FF8E53);color:#fff;box-shadow:0 4px 15px rgba(255,107,157,.3)}
+.btn-primary:active{transform:scale(0.98)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-outline{background:#fff;color:var(--primary);border:1.5px solid var(--primary)}
+.btn-outline:active{background:#FFF5F7}
+.btn-sm{padding:8px 14px;font-size:13px;width:auto}
+
+/* 底部固定按钮(移动端) */
+.mobile-action{position:fixed;bottom:0;left:0;right:0;padding:12px 16px;background:#fff;box-shadow:0 -2px 10px rgba(0,0,0,0.08);z-index:100}
+.desktop-only{display:none}
+@media(min-width:768px){.mobile-action{display:none}.desktop-only{display:block!important}}
+
+/* 结果区 */
+.result-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;color:#ccc;padding:40px 20px}
+.result-empty .icon{font-size:48px;margin-bottom:12px}
+.result-empty .text{font-size:14px;text-align:center}
+@media(min-width:768px){.result-empty{min-height:400px}.result-empty .icon{font-size:64px;margin-bottom:16px}.result-empty .text{font-size:15px}}
+
+.tabs{display:flex;border-bottom:1px solid var(--border);padding:0 12px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tab{padding:12px 14px;font-size:13px;font-weight:500;color:#888;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;flex-shrink:0}
+.tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+.pattern-container{padding:12px;overflow:auto;max-height:50vh;display:flex;justify-content:center;-webkit-overflow-scrolling:touch}
+.pattern-container img{max-width:100%;height:auto;border-radius:4px}
+@media(min-width:768px){.pattern-container{padding:20px;max-height:65vh}}
+
+.summary-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:12px}
+.summary-card{text-align:center;padding:12px 6px;background:linear-gradient(135deg,#FFF5F7,#FFF0F2);border-radius:10px}
+.summary-card .number{font-size:22px;font-weight:700;color:var(--primary)}
+.summary-card .label{font-size:11px;color:#888;margin-top:2px}
+@media(min-width:768px){.summary-cards{gap:12px;margin:16px}.summary-card{padding:16px 10px}.summary-card .number{font-size:26px}.summary-card .label{font-size:12px}}
+
+.stats-table{width:100%;border-collapse:collapse;font-size:13px}
+.stats-table th{padding:10px 12px;background:#FFF5F7;text-align:left;font-weight:600;color:#666;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:1}
+.stats-table td{padding:8px 12px;border-bottom:1px solid #F8F0F3}
+.stats-table tr:active{background:#FFFAFC}
+.color-cell{display:flex;align-items:center;gap:8px}
+.color-dot{width:18px;height:18px;border-radius:4px;border:1px solid rgba(0,0,0,.1);flex-shrink:0}
+.cnt{font-weight:700;color:var(--primary)}
+
+.download-bar{display:flex;gap:6px;padding:12px;border-top:1px solid var(--border);flex-wrap:wrap}
+.zoom-controls{display:flex;gap:4px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border)}
+.zoom-controls button{width:36px;height:36px;border:1px solid #ddd;background:#fff;border-radius:6px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;touch-action:manipulation}
+.zoom-controls button:active{background:#FFF5F7;border-color:var(--primary)}
+.zoom-controls .zl{font-size:13px;color:#888;padding:0 8px;min-width:50px;text-align:center}
+
+.loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(4px)}
+.loading-overlay.hidden{display:none}
+.spinner{width:40px;height:40px;border:4px solid #FFE0EA;border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{margin-top:12px;font-size:14px;color:#888}
+
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-120%);padding:10px 20px;border-radius:8px;background:#333;color:#fff;font-size:13px;z-index:2000;transition:transform .3s;max-width:90vw;text-align:center}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.error{background:#E85555}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🎨 拼豆图纸生成器</h1>
+  <p>Mard 221色 · 上传图片 → 设置画板 → 生成图纸</p>
+</div>
+
+<div class="container">
+  <div class="grid">
+    <!-- 左侧设置 -->
+    <div>
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-header" onclick="toggleCollapse(this)">📷 上传图片 <span class="arrow">▼</span></div>
+        <div class="card-body">
+          <div class="upload-zone" id="uploadZone">
+            <div class="icon">🖼️</div>
+            <div class="text">点击上传图片</div>
+            <div class="hint">JPG / PNG / GIF / WebP · 最大 20MB</div>
+            <input type="file" id="fileInput" accept="image/*">
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-header" onclick="toggleCollapse(this)">📐 画板尺寸 <span class="arrow">▼</span></div>
+        <div class="card-body">
+          <div class="slider-group">
+            <div class="slider-label">
+              <span class="name">宽度（珠子数）</span>
+              <span class="value" id="wVal">58</span>
+            </div>
+            <div class="slider-wrap">
+              <input type="range" id="boardW" min="5" max="100" value="58" oninput="syncSlider(this,'wVal','wNum')">
+              <input type="number" id="wNum" min="5" max="100" value="58" oninput="syncNum(this,'wVal','boardW')">
+            </div>
+          </div>
+          <div class="slider-group">
+            <div class="slider-label">
+              <span class="name">高度（珠子数）</span>
+              <span class="value" id="hVal">58</span>
+            </div>
+            <div class="slider-wrap">
+              <input type="range" id="boardH" min="5" max="200" value="58" oninput="syncSlider(this,'hVal','hNum')">
+              <input type="number" id="hNum" min="5" max="200" value="58" oninput="syncNum(this,'hVal','boardH')">
+            </div>
+          </div>
+          <div class="quick-sizes">
+            <button onclick="setSize(29,29)">29×29</button>
+            <button onclick="setSize(58,29)">58×29</button>
+            <button onclick="setSize(58,58)" class="active">58×58</button>
+            <button onclick="setSize(100,58)">100×58</button>
+            <button onclick="setSize(100,100)">100×100</button>
+          </div>
+          <div class="toggle-row">
+            <span class="label">抖动效果（色彩更细腻）</span>
+            <div class="toggle" id="ditherToggle"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-header" onclick="toggleCollapse(this)">🎨 Mard 色板 <span style="margin-left:auto;background:var(--primary);color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px" id="totalColors">221色</span> <span class="arrow">▼</span></div>
+        <div class="card-body collapsed">
+          <div class="color-grid" id="colorGrid"></div>
+        </div>
+      </div>
+
+      <!-- 桌面端生成按钮 -->
+      <div class="desktop-only" style="margin-bottom:12px">
+        <button class="btn btn-primary" id="convertBtn" disabled onclick="doConvert()">✨ 生成拼豆图纸</button>
+      </div>
+    </div>
+
+    <!-- 右侧结果 -->
+    <div class="card">
+      <div id="resultEmpty" class="result-empty">
+        <div class="icon">🧩</div>
+        <div class="text">上传图片后点击下方按钮生成图纸</div>
+      </div>
+      <div id="resultArea" style="display:none">
+        <div class="summary-cards">
+          <div class="summary-card"><div class="number" id="statW">-</div><div class="label">宽度</div></div>
+          <div class="summary-card"><div class="number" id="statH">-</div><div class="label">高度</div></div>
+          <div class="summary-card"><div class="number" id="statColors">-</div><div class="label">颜色</div></div>
+          <div class="summary-card"><div class="number" id="statBeads">-</div><div class="label">珠子</div></div>
+        </div>
+        <div class="tabs">
+          <div class="tab active" data-tab="preview">预览</div>
+          <div class="tab" data-tab="pattern">图纸</div>
+          <div class="tab" data-tab="stats">颜色统计</div>
+          <div class="tab" data-tab="legend">图例</div>
+        </div>
+        <div class="tab-content active" id="tab-preview">
+          <div class="pattern-container"><img id="previewImg" alt="预览"></div>
+        </div>
+        <div class="tab-content" id="tab-pattern">
+          <div class="zoom-controls">
+            <button id="zoomOut">−</button>
+            <span class="zl" id="zoomLabel">100%</span>
+            <button id="zoomIn">+</button>
+            <button id="zoomFit" style="width:auto;padding:0 10px;font-size:12px">适合</button>
+          </div>
+          <div class="pattern-container" id="patternContainer"><img id="patternImg" alt="图纸"></div>
+        </div>
+        <div class="tab-content" id="tab-stats">
+          <div style="padding:12px;max-height:55vh;overflow:auto;-webkit-overflow-scrolling:touch">
+            <table class="stats-table">
+              <thead><tr><th>颜色</th><th>色号</th><th>数量</th></tr></thead>
+              <tbody id="statsBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="tab-content" id="tab-legend">
+          <div class="pattern-container"><img id="legendImg" alt="图例"></div>
+        </div>
+        <div class="download-bar">
+          <button class="btn btn-primary btn-sm" onclick="saveToAlbum('patternImg','拼豆图纸')" style="flex:1">💾 保存图纸到相册</button>
+          <button class="btn btn-outline btn-sm" onclick="saveToAlbum('previewImg','拼豆预览')">预览</button>
+          <button class="btn btn-outline btn-sm" onclick="saveToAlbum('legendImg','颜色图例')">图例</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 移动端底部固定按钮 -->
+<div class="mobile-action">
+  <button class="btn btn-primary" id="mobileBtn" disabled>✨ 生成拼豆图纸</button>
+</div>
+
+<div class="loading-overlay hidden" id="loading">
+  <div class="spinner"></div>
+  <div class="loading-text">正在生成拼豆图纸...</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+let selectedFile=null,zoomLevel=1;
+const $=id=>document.getElementById(id);
+
+// 折叠切换(仅移动端)
+function toggleCollapse(header){
+  if(window.innerWidth>=768)return;
+  const body=header.nextElementSibling;
+  const arrow=header.querySelector('.arrow');
+  body.classList.toggle('collapsed');
+  arrow.classList.toggle('collapsed');
+}
+
+// 滑块同步
+function syncSlider(el,valId,numId){
+  const v=el.value;
+  $(valId).textContent=v;
+  $(numId).value=v;
+  updateSliderBg(el);
+  updateQuickSizes();
+}
+function syncNum(el,valId,sliderId){
+  let v=Math.max(5,Math.min(sliderId==='boardW'?100:200,parseInt(el.value)||5));
+  el.value=v;
+  $(valId).textContent=v;
+  $(sliderId).value=v;
+  updateSliderBg($(sliderId));
+  updateQuickSizes();
+}
+function updateSliderBg(el){
+  const min=parseInt(el.min),max=parseInt(el.max),val=parseInt(el.value);
+  const pct=((val-min)/(max-min))*100;
+  el.style.background=`linear-gradient(to right,var(--primary) 0%,var(--primary) ${pct}%,#E8D8DD ${pct}%,#E8D8DD 100%)`;
+}
+function setSize(w,h){
+  $('boardW').value=w;$('wNum').value=w;$('wVal').textContent=w;
+  $('boardH').value=h;$('hNum').value=h;$('hVal').textContent=h;
+  updateSliderBg($('boardW'));updateSliderBg($('boardH'));
+  updateQuickSizes();
+}
+function updateQuickSizes(){
+  const w=$('boardW').value,h=$('boardH').value;
+  document.querySelectorAll('.quick-sizes button').forEach(b=>{
+    const m=b.textContent.match(/(\d+)×(\d+)/);
+    b.classList.toggle('active',m&&m[1]==w&&m[2]==h);
+  });
+}
+
+// 初始化
+async function init(){
+  try{
+    const res=await fetch('api/colors');
+    const data=await res.json();
+    $('totalColors').textContent=data.total+'色';
+    const grid=$('colorGrid');grid.innerHTML='';
+    data.colors.forEach(c=>{
+      const d=document.createElement('div');
+      d.className='color-item';
+      d.style.background=c.hex;
+      d.innerHTML=`<div class="tip">${c.code} ${c.name}</div>`;
+      grid.appendChild(d);
+    });
+  }catch(e){console.error(e)}
+  updateSliderBg($('boardW'));updateSliderBg($('boardH'));
+}
+
+// 上传
+const uz=$('uploadZone'),fi=$('fileInput');
+uz.addEventListener('click',()=>fi.click());
+uz.addEventListener('dragover',e=>{e.preventDefault();uz.classList.add('dragover')});
+uz.addEventListener('dragleave',()=>uz.classList.remove('dragover'));
+uz.addEventListener('drop',e=>{e.preventDefault();uz.classList.remove('dragover');if(e.dataTransfer.files.length)handleFile(e.dataTransfer.files[0])});
+fi.addEventListener('change',()=>{if(fi.files.length)handleFile(fi.files[0])});
+function handleFile(f){
+  if(!f.type.startsWith('image/')){showToast('请选择图片文件',true);return}
+  selectedFile=f;
+  const r=new FileReader();
+  r.onload=e=>{
+    uz.classList.add('has-image');
+    uz.innerHTML=`<img src="${e.target.result}" alt=""><div style="margin-top:6px;font-size:11px;color:#999">${f.name} (${(f.size/1024).toFixed(0)}KB)</div><input type="file" id="fileInput" accept="image/*" style="display:none">`;
+    const ni=uz.querySelector('input');
+    ni.addEventListener('change',()=>{if(ni.files.length)handleFile(ni.files[0])});
+    $('convertBtn')&&($('convertBtn').disabled=false);
+    $('mobileBtn').disabled=false;
+  };
+  r.readAsDataURL(f);
+}
+
+// Tab
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('tab-'+t.dataset.tab).classList.add('active');
+  });
+});
+
+// 抖动
+$('ditherToggle').addEventListener('click',()=>$('ditherToggle').classList.toggle('on'));
+
+// 缩放
+$('zoomIn').addEventListener('click',()=>setZoom(zoomLevel+.25));
+$('zoomOut').addEventListener('click',()=>setZoom(Math.max(.25,zoomLevel-.25)));
+$('zoomFit').addEventListener('click',()=>{const c=$('patternContainer'),i=$('patternImg');if(i.naturalWidth)setZoom(Math.min((c.clientWidth-24)/i.naturalWidth,2))});
+function setZoom(l){zoomLevel=Math.round(l*100)/100;$('patternImg').style.transform=`scale(${zoomLevel})`;$('patternImg').style.transformOrigin='top left';$('zoomLabel').textContent=Math.round(zoomLevel*100)+'%'}
+
+// 转换(桌面侧边按钮 + 移动端底部按钮)
+async function doConvert(){
+  if(!selectedFile)return;
+  $('loading').classList.remove('hidden');
+  const fd=new FormData();
+  fd.append('image',selectedFile);
+  fd.append('width',$('boardW').value);
+  fd.append('height',$('boardH').value);
+  fd.append('dither',$('ditherToggle').classList.contains('on'));
+  try{
+    const res=await fetch('api/convert',{method:'POST',body:fd});
+    const data=await res.json();
+    if(data.error)throw new Error(data.error);
+    showResult(data);
+    // 移动端自动滚到结果区
+    if(window.innerWidth<768)$('resultArea').scrollIntoView({behavior:'smooth'});
+  }catch(e){showToast(e.message,true)}
+  finally{$('loading').classList.add('hidden')}
+}
+$('mobileBtn').addEventListener('click',doConvert);
+
+function showResult(d){
+  $('resultEmpty').style.display='none';
+  $('resultArea').style.display='block';
+  $('statW').textContent=d.width;
+  $('statH').textContent=d.height;
+  $('statColors').textContent=d.color_count;
+  $('statBeads').textContent=d.total_beads.toLocaleString();
+  $('previewImg').src=d.preview_url;
+  $('patternImg').src=d.pattern_url;
+  $('legendImg').src=d.legend_url;
+  const tb=$('statsBody');tb.innerHTML='';
+  for(const[code,info]of Object.entries(d.stats)){
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td><div class="color-cell"><div class="color-dot" style="background:${info.hex}"></div>${info.name}</div></td><td>${code}</td><td class="cnt">${info.count}</td>`;
+    tb.appendChild(tr);
+  }
+  setZoom(1);
+}
+
+// 检测 iOS
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+// 图片转 Blob（通过 canvas，兼容性最好）
+function imgToBlob(imgEl) {
+  return new Promise((resolve, reject) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = imgEl.naturalWidth;
+    canvas.height = imgEl.naturalHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(imgEl, 0, 0);
+    canvas.toBlob(blob => {
+      if (blob) resolve(blob);
+      else reject(new Error('canvas toBlob failed'));
+    }, 'image/png');
+  });
+}
+
+// 保存图片（iOS / Android / 桌面 全兼容）
+async function saveToAlbum(imgId, name) {
+  const img = $(imgId);
+  if (!img.src || !img.naturalWidth) { showToast('图片未加载完成', true); return; }
+
+  showToast('正在保存...');
+
+  try {
+    const blob = await imgToBlob(img);
+    const file = new File([blob], name + '.png', { type: 'image/png' });
+
+    // 方案1: Web Share API（iOS/Android 原生分享，可直接"存储图像"）
+    if (navigator.share) {
+      try {
+        const data = { title: name };
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          data.files = [file];
+        }
+        await navigator.share(data);
+        return;
+      } catch (e) {
+        if (e.name === 'AbortError') return;
+      }
+    }
+
+    // 方案2: Blob URL 下载
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name + '.png';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
+    showToast('已开始下载');
+
+  } catch (e) {
+    console.error('save error:', e);
+    // 方案3: 新窗口打开（iOS 可长按图片 → 存储图像）
+    window.open(img.src, '_blank');
+    showToast('请长按图片保存');
+  }
+}
+function showToast(m,e=false){const t=$('toast');t.textContent=m;t.className='toast show'+(e?' error':'');setTimeout(()=>t.className='toast',3000)}
+
+init();
+</script>
+</body>
+</html>
