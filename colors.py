@@ -42,7 +42,6 @@ MARD_COLORS = [
     BeadColor("A24", "#F7F8A2", 247, 248, 162, "#F7F8A2"),
     BeadColor("A25", "#FFD67D", 255, 214, 125, "#FFD67D"),
     BeadColor("A26", "#FFC830", 255, 200, 48, "#FFC830"),
-
     # ========== B 绿系 ==========
     BeadColor("B1", "#E6EE31", 230, 238, 49, "#E6EE31"),
     BeadColor("B2", "#63F347", 99, 243, 71, "#63F347"),
@@ -76,7 +75,6 @@ MARD_COLORS = [
     BeadColor("B30", "#E2FCB1", 226, 252, 177, "#E2FCB1"),
     BeadColor("B31", "#B0E792", 176, 231, 146, "#B0E792"),
     BeadColor("B32", "#9CAB5A", 156, 171, 90, "#9CAB5A"),
-
     # ========== C 蓝系 ==========
     BeadColor("C1", "#E8FFE7", 232, 255, 231, "#E8FFE7"),
     BeadColor("C2", "#A9F9FC", 169, 249, 252, "#A9F9FC"),
@@ -107,7 +105,6 @@ MARD_COLORS = [
     BeadColor("C27", "#D3DFFA", 211, 223, 250, "#D3DFFA"),
     BeadColor("C28", "#BBCFED", 187, 207, 237, "#BBCFED"),
     BeadColor("C29", "#34488E", 52, 72, 142, "#34488E"),
-
     # ========== D 紫系 ==========
     BeadColor("D1", "#AEB4F2", 174, 180, 242, "#AEB4F2"),
     BeadColor("D2", "#858EDD", 133, 142, 221, "#858EDD"),
@@ -135,7 +132,6 @@ MARD_COLORS = [
     BeadColor("D24", "#7786E5", 119, 134, 229, "#7786E5"),
     BeadColor("D25", "#494FC7", 73, 79, 199, "#494FC7"),
     BeadColor("D26", "#DFC2F8", 223, 194, 248, "#DFC2F8"),
-
     # ========== E 粉系 ==========
     BeadColor("E1", "#FDD3CC", 253, 211, 204, "#FDD3CC"),
     BeadColor("E2", "#FEC0DF", 254, 192, 223, "#FEC0DF"),
@@ -161,7 +157,6 @@ MARD_COLORS = [
     BeadColor("E22", "#B785A1", 183, 133, 161, "#B785A1"),
     BeadColor("E23", "#937A8D", 147, 122, 141, "#937A8D"),
     BeadColor("E24", "#E1BCE8", 225, 188, 232, "#E1BCE8"),
-
     # ========== F 红系 ==========
     BeadColor("F1", "#FD957B", 253, 149, 123, "#FD957B"),
     BeadColor("F2", "#FC3D46", 252, 61, 70, "#FC3D46"),
@@ -188,7 +183,6 @@ MARD_COLORS = [
     BeadColor("F23", "#F67E66", 246, 126, 102, "#F67E66"),
     BeadColor("F24", "#E698AA", 230, 152, 170, "#E698AA"),
     BeadColor("F25", "#E54B4F", 229, 75, 79, "#E54B4F"),
-
     # ========== G 棕橙系 ==========
     BeadColor("G1", "#FFE2CE", 255, 226, 206, "#FFE2CE"),
     BeadColor("G2", "#FFC4AA", 255, 196, 170, "#FFC4AA"),
@@ -211,7 +205,6 @@ MARD_COLORS = [
     BeadColor("G19", "#E07935", 224, 121, 53, "#E07935"),
     BeadColor("G20", "#A94023", 169, 64, 35, "#A94023"),
     BeadColor("G21", "#B88558", 184, 133, 88, "#B88558"),
-
     # ========== H 灰黑白系 ==========
     BeadColor("H1", "#FDFBFF", 253, 251, 255, "#FDFBFF"),
     BeadColor("H2", "#FEFFFF", 254, 255, 255, "#FEFFFF"),
@@ -236,7 +229,6 @@ MARD_COLORS = [
     BeadColor("H21", "#FFFBE1", 255, 251, 225, "#FFFBE1"),
     BeadColor("H22", "#CACAD4", 202, 202, 212, "#CACAD4"),
     BeadColor("H23", "#9A9D94", 154, 157, 148, "#9A9D94"),
-
     # ========== M 特殊色 ==========
     BeadColor("M1", "#BCC6B8", 188, 198, 184, "#BCC6B8"),
     BeadColor("M2", "#8AA386", 138, 163, 134, "#8AA386"),
